@@ -15,13 +15,15 @@ exchange_rates = {'2000': 4.071662, '2001': 4.20319, '2002': 4.744882, '2003': 4
 def get_excel_as_df(path):
     return pd.read_excel(path, index_col=0)
 
+
 def get_year_weight(inflation_df, import_df, rows_in_df, year):
     year_weight_list = []
 
     # Get countries as lists
     inflation_countries = inflation_df.columns.to_list()
     import_countries = import_df.columns.to_list()
-
+    import_df.index = list(inflation_df.index)[5:-23]
+    # print(list(inflation_df.index)[5:-23])
     # Iterate over each country
     for country in inflation_countries:
         if country in import_countries:
@@ -29,22 +31,23 @@ def get_year_weight(inflation_df, import_df, rows_in_df, year):
             # If data does not exists => assign 2019 data
             try:
                 import_value = float(import_df.loc[year][country])
+
             except:
-                import_value = float(import_df.loc['2019'][country])
+                import_value = float(import_df.loc['2019Q1'][country])
 
             # Get exchange rate and if data does not exists => assign 2019 data
             exchange_rate = exchange_rates.get(year)
+
             if exchange_rate is None:
                 exchange_rate = exchange_rates.get('2019')
 
             # Multiply base by exchange rate in base year
-            inflation_value_base = float(inflation_df.loc['1999'][country])*4.15
+            inflation_value_base = float(inflation_df.loc['1999Q1'][country]) * 4.15
 
             # Multiply exchange rate by usd to ils exchange rate in current year
-            inflation_value = float(inflation_df.loc[year][country])*exchange_rate / inflation_value_base
+            inflation_value = float(inflation_df.loc[year][country]) * exchange_rate / inflation_value_base
 
             if pd.notna(import_value) and pd.notna(inflation_value):  # Check that values are not null
-
                 # Format data to 3 decimal points
                 inflation_pow_import_share = float("{:.3f}".format(inflation_value ** import_value))
 
@@ -60,12 +63,12 @@ def get_trade_weight_list(inflation_df, import_df, year_start, year_end):
 
     # Iterate over years
     for year in range(year_start, year_end + 1):  # Iterate over years
-        year = str(year)
-        rows_in_df = inflation_df.loc[year].shape[0]  # Number of Rows in DF
+        for quarter in range(1, 5):
+            rows_in_df = inflation_df.loc[str(year) + 'Q' + str(quarter)].shape[0]  # Number of Rows in DF
 
-        # Append TWI attribution to dictionary
-        year_weight_list = get_year_weight(inflation_df, import_df, rows_in_df, year)
-        trade_weight_list.append({year: year_weight_list})
+            # Append TWI attribution to dictionary
+            year_weight_list = get_year_weight(inflation_df, import_df, rows_in_df, str(year) + 'Q' + str(quarter))
+            trade_weight_list.append({str(year) + 'Q' + str(quarter): year_weight_list})
 
     return trade_weight_list
 

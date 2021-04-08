@@ -7,6 +7,8 @@ def clean_cell(cell):
         cell = cell.replace('r', '')
         cell = cell.replace(',', '')
         return float(cell)
+    else:
+        return cell
 
 
 def get_percent_df(df, divider):
@@ -17,16 +19,22 @@ def get_percent_df(df, divider):
 
 
 def get_import_df(path, yearly):
+
     import_df = pd.read_excel(path, index_col=0)
     for col in import_df:
         if re.search('Q[1-4]$', col) and col != 'Country' and yearly:
             import_df = import_df.drop(columns=[col], axis=1)
 
-        else:
+        elif not re.search('Q[1-4]$', col) and not yearly:
             # Clean Cell Data
-            for code in import_df:
-                for i in import_df[code]:
-                    i = clean_cell(i)
+            import_df = import_df.drop(columns=[col], axis=1)
+
+            for row in range(import_df.shape[0]):
+                for cell in range(import_df.iloc[row].shape[0]):
+
+                    # print(import_df[row][cell])
+                    import_df.iloc[row][cell] = clean_cell(import_df.iloc[row][cell])
+
 
     import_df = import_df.transpose()
 

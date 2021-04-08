@@ -32,8 +32,7 @@ def get_selected_dataframes(selected_data, gpmn_dict_of_dfs):
         data_df.columns = get_index_as_list(data_df, True)
 
         # Get concatenated dataframe
-        data_df.columns = data_df.loc['Comments -']
-        data_df = data_df.drop(index=['Comments -', '1999'])
-
+        data_df.columns = data_df.loc['Comments ->']
+        data_df = data_df.drop(index=['Comments ->', '1999Q1', '1999Q2', '1999Q3', '1999Q4'])
         selected_data_df = pd.concat([selected_data_df, data_df], axis=1)
     return selected_data_df
